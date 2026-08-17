@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Quiz App</title>
+      <link rel="stylesheet" href="frontend.css">
+
+</head>
+<body>
+
+  <main class="quiz-container">
+    <!-- Top Progress / Question Slider Bar -->
+    <div class="progress-header">
+      <div class="progress-info">
+        <span>Question <strong>2</strong> of <strong>5</strong></span>
+        <span>40% Completed</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" style="width: 40%;"></div>
+      </div>
+    </div>
+
+    <!-- Question Content -->
+    <section class="question-box">
+      <div class="question-category">JavaScript • Medium</div>
+      <h2 class="question-text">
+        Where does the callback for a <code>setTimeout(fn, 0)</code> call get placed in the event loop?
+      </h2>
+    </section>
+
+    <!-- Options -->
+    <form class="options-group">
+      <label class="option-label">
+        <input type="radio" name="quiz-opt" value="0" />
+        <span class="custom-radio"></span>
+        <span>Call Stack</span>
+      </label>
+
+      <label class="option-label">
+        <input type="radio" name="quiz-opt" value="1" />
+        <span class="custom-radio"></span>
+        <span>Microtask Queue</span>
+      </label>
+
+      <label class="option-label">
+        <input type="radio" name="quiz-opt" value="2" />
+        <span class="custom-radio"></span>
+        <span>Macrotask (Callback) Queue</span>
+      </label>
+
+      <label class="option-label">
+        <input type="radio" name="quiz-opt" value="3" />
+        <span class="custom-radio"></span>
+        <span>Web API Memory Heap</span>
+      </label>
+    </form>
+
+    <!-- Footer Controls -->
+    <div class="quiz-actions">
+      <button class="btn btn-secondary" type="button">Previous</button>
+      <button class="btn btn-primary" type="button">Next Question</button>
+    </div>
+  </main>
+
+</body>
+</html>
