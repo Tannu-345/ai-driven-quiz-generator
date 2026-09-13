@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quizzy - AI Quiz Generator</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f3f4f6;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --success: #10b981;
+            --danger: #ef4444;
+            --border: #e5e7eb;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+
+        .container { background: var(--surface); width: 100%; max-width: 650px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 30px; display: none; }
+        .container.active { display: block; }
+
+        .brand { text-align: center; margin-bottom: 24px; font-size: 28px; font-weight: bold; color: var(--primary); }
+        .form-group { margin-bottom: 18px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; color: var(--text); }
+        input[type="text"], input[type="email"], input[type="password"], select { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; }
+        
+        .btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: background 0.2s; }
+        .btn:hover { background: var(--primary-hover); }
+        .btn-outline { background: transparent; color: var(--primary); border: 1px solid var(--primary); margin-top: 10px; }
+        .btn-outline:hover { background: #eef2ff; }
+
+        /* Dashboard & Search Header */
+        .search-upload-container { display: flex; gap: 10px; margin-bottom: 20px; }
+        .search-box { flex: 1; }
+        .upload-btn-wrapper { position: relative; overflow: hidden; display: inline-block; }
+        .btn-upload { background: var(--primary); color: white; padding: 0 20px; height: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 24px; cursor: pointer; border: none; }
+        .upload-btn-wrapper input[type=file] { position: absolute; left: 0; top: 0; opacity: 0; height: 100%; width: 100%; cursor: pointer; }
+
+        /* Quiz Customization */
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .quiz-option-card { border: 2px solid var(--border); border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; }
+        .quiz-option-card.selected { border-color: var(--primary); background: #eef2ff; }
+
+        /* Quiz Interface */
+        .quiz-header { display: flex; justify-content: space-between; margin-bottom: 20px; font-weight: bold; color: var(--text-light); }
+        .option-btn { width: 100%; text-align: left; padding: 12px 16px; margin: 8px 0; border: 1px solid var(--border); border-radius: 8px; background: white; cursor: pointer; font-size: 15px; transition: all 0.2s; }
+        .option-btn:hover { background: var(--bg); }
+        .option-btn.correct { background-color: #d1fae5; border-color: var(--success); color: #065f46; }
+        .option-btn.incorrect { background-color: #fee2e2; border-color: var(--danger); color: #991b1b; }
+        
+        .explanation-box { margin-top: 15px; padding: 12px; background-color: #e0f2fe; border-left: 4px solid #0284c7; border-radius: 4px; font-size: 14px; }
+        
+        /* Summary Results */
+        .result-item { border-bottom: 1px solid var(--border); padding: 15px 0; }
+        .result-item:last-child { border-bottom: none; }
+        .badge { display: inline-block; padding: 3px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: white; }
+        .badge-success { background: var(--success); }
+        .badge-danger { background: var(--danger); }
+    </style>
+</head>
+<body>
+
+    <!-- 1. AUTH PAGE -->
+    <div id="auth-page" class="container active">
+        <div class="brand">Quizzy ⚡</div>
+        
+        <!-- LOGIN FORM -->
+        <form id="login-form" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="login-username">username</label>
+                <input type="text" id="login-username" placeholder="username" required>
+            </div>
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <input type="password" id="login-password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn">Log In</button>
+            <button type="button" class="btn btn-outline" onclick="toggleAuth('signup')">Need an account? Sign Up</button>
+        </form>
+
+        <!-- SIGNUP FORM -->
+        <form id="signup-form" onsubmit="handleSignup(event)" style="display: none;">
+            <div class="form-group">
+                <label for="signup-username">userame</label>
+                <input type="text" id="signup-username" placeholder="choose a username" required>
+            </div>
+           
+            <div class="form-group">
+                <label for="signup-password">Password</label>
+                <input type="password" id="signup-password" placeholder="••••••••" required>
+            </div>
+            <button type="submit" class="btn">Sign Up</button>
+            <button type="button" class="btn btn-outline" onclick="toggleAuth('login')">Already have an account? Log In</button>
+        </form>
+    </div>
+
+    <!-- 2. DASHBOARD PAGE -->
+    <div id="dashboard-page" class="container">
+        <div class="brand">Quizzy ⚡</div>
+        <div class="search-upload-container">
+            <div class="search-box">
+                <input type="text" placeholder="Search saved quizzes...">
+            </div>
+            <div class="upload-btn-wrapper" title="Upload Document PDF">
+                <button class="btn-upload">+</button>
+                <input type="file" id="pdf-upload" accept=".pdf" onchange="handleFileUpload(event)">
+            </div>
+        </div>
+        <p style="text-align: center; color: var(--text-light); font-size: 14px;">Upload a PDF file using the <b>+</b> button above to generate a new custom quiz using AI.</p>
+    </div>
+
+    <!-- SEARCH HISTORY CONTAINER -->
+    <div class="history-container">
+        <div class="history-header">
+            <span>Recent Searches</span>
+            <button type="button" class="clear-btn" onclick="clearSearchHistory()">Clear All</button>
+        </div>
+        <div id="history-list" class="history-list">
+            <span class="empty-history">No recent searches</span>
+        </div>
+    </div>
+
+    <p style="text-align: center; color: var(--text-light); font-size: 14px; margin-top: 15px;">
+        Upload a PDF file using the <b>+</b> button above to generate a new custom quiz using AI.
+    </p>
+    
+    <!-- 3. CONFIGURATION PAGE -->
+    <div id="config-page" class="container">
+        <div class="brand">Quizzy ⚡</div>
+        <h3 style="margin-bottom: 15px;" id="file-title">Configure Generated Quiz</h3>
+        
+        <div class="form-group">
+            <label>Difficulty Level</label>
+            <select id="difficulty-select">
+                <option value="Easy">Easy</option>
+                <option value="Medium" selected>Medium</option>
+                <option value="Hard">Hard</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Feedback Mode</label>
+            <select id="feedback-mode-select">
+                <option value="per-question">Show correct answer & explanation after each question</option>
+                <option value="end-of-quiz">Show full results only after finishing the entire quiz</option>
+            </select>
+        </div>
+
+        <button class="btn" onclick="startQuiz()">Generate & Start Quiz</button>
+    </div>
+
+    <!-- 4. ACTIVE QUIZ PAGE -->
+    <div id="quiz-page" class="container">
+        <div class="quiz-header">
+            <span id="quiz-progress">Question 1 of 3</span>
+            <span id="quiz-diff-tag">Medium</span>
+        </div>
+
+        <h3 id="question-text" style="margin-bottom: 15px;">Question text goes here?</h3>
+        <div id="options-container"></div>
+        <div id="explanation-container" class="explanation-box" style="display: none;"></div>
+
+        <button id="next-btn" class="btn" style="margin-top: 20px; display: none;" onclick="nextQuestion()">Next Question</button>
+    </div>
+
+    <!-- 5. RESULTS PAGE -->
+    <div id="results-page" class="container">
+        <div class="brand">Quiz Performance</div>
+        <h2 style="text-align: center; margin-bottom: 10px;" id="score-text">You scored 0/0</h2>
+        <p style="text-align: center; color: var(--text-light); margin-bottom: 20px;">Review your answers and explanations below:</p>
+        
+        <div id="summary-container"></div>
+
+        <button class="btn" style="margin-top: 20px;" onclick="navigateTo('dashboard-page')">Back to Dashboard</button>
+    </div>
+
+    <script src="generated.js"></script>
+</body>
+</html>
