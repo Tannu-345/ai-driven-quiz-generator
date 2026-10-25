@@ -78,9 +78,9 @@
                 <label for="login-password">Password</label>
                 <input type="password" id="login-password" placeholder="••••••••" required>
             </div>
-            <button type="submit" class="btn">Log In</button>
-            <button type="button" class="btn btn-outline" onclick="toggleAuth('signup')">Need an account? Sign Up</button>
+            <button type="submit" class="btn">Log In</button>  
         </form>
+        <button type="button" class="btn btn-outline" onclick="toggleAuth('signup')">Need an account? Sign Up</button>
 
         <!-- SIGNUP FORM -->
         <form id="signup-form" onsubmit="handleSignup(event)" style="display: none;">
@@ -103,7 +103,7 @@
         <div class="brand">Quizzy ⚡</div>
         <div class="search-upload-container">
             <div class="search-box">
-                <input type="text" placeholder="Search saved quizzes...">
+                <input type="text" id="topic-input" placeholder="Search topic" onkeydown="handleTopicInput(event)">
             </div>
             <div class="upload-btn-wrapper" title="Upload Document PDF">
                 <button class="btn-upload">+</button>
@@ -113,8 +113,9 @@
         <p style="text-align: center; color: var(--text-light); font-size: 14px;">Upload a PDF file using the <b>+</b> button above to generate a new custom quiz using AI.</p>
     </div>
 
+
     <!-- SEARCH HISTORY CONTAINER -->
-    <div class="history-container">
+    <!-- <div class="history-container">
         <div class="history-header">
             <span>Recent Searches</span>
             <button type="button" class="clear-btn" onclick="clearSearchHistory()">Clear All</button>
@@ -127,7 +128,9 @@
     <p style="text-align: center; color: var(--text-light); font-size: 14px; margin-top: 15px;">
         Upload a PDF file using the <b>+</b> button above to generate a new custom quiz using AI.
     </p>
-    
+     -->
+
+
     <!-- 3. CONFIGURATION PAGE -->
     <div id="config-page" class="container">
         <div class="brand">Quizzy ⚡</div>
@@ -148,6 +151,10 @@
                 <option value="per-question">Show correct answer & explanation after each question</option>
                 <option value="end-of-quiz">Show full results only after finishing the entire quiz</option>
             </select>
+        </div>
+        <div class="form-group">
+            <label> noofquestions</label>
+                <input type="text" id="noofquestions" placeholder="enter no of questions">
         </div>
 
         <button class="btn" onclick="startQuiz()">Generate & Start Quiz</button>

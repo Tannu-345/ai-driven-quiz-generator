@@ -1,5 +1,8 @@
  // App State
         let uploadedFileName = "";
+        let selectedTopic="";
+        let selectedFile= null;
+        let uploadedPdfFile= null;
         let currentQuiz = [];
         let currentQuestionIndex = 0;
         let score = 0;
@@ -12,112 +15,199 @@
             document.getElementById(pageId).classList.add('active');
         }
 
-
-function handleLogin(event) {
-    event.preventDefault(); // Prevents page reload on form submit
+// ............................................................................................................................................
+// 1. Toggle between Login and Sign Up forms
+function toggleAuth(viewType) {
+    const authPage = document.getElementById('auth-page');
+    const dashboardPage = document.getElementById('dashboard-page'); 
+    const loginForm = document.getElementById('login-form');
+    const signupForm = document.getElementById('signup-form');
     
-    const login = document.getElementById('login-username').value;
-    const password = document.getElementById('login-password').value;
-
-    //retrieve stored credentials
-    const savedUsername= localStorage.getItem('savedUsername');
-    const savedPassword= localStorage.getItem('savedPassword');
-
-    // Simple authentication check
-    if (login === savedUsername && password === savedPassword) {
-        toggleAuth('dashboard-page');
-    } else{
-        alert("invalid username or password!")
+    if (viewType === 'signup') {
+        loginForm.style.display = 'none';
+        signupForm.style.display = 'block';
+    } else if (viewType === 'login') {
+        signupForm.style.display = 'none';
+        loginForm.style.display = 'block';
+    } else if (viewType === 'dashboard-page') {
+        // Hide the authentication container and show the dashboard container
+        if (authPage) authPage.style.display = 'none';
+        if (dashboardPage) dashboardPage.style.display = 'block';
     }
 }
 
+// 2. Handle Sign Up (Checks if user exists, then registers)
 function handleSignup(event) {
     event.preventDefault();
     
-    const username = document.getElementById('signup-username').value;
+    const username = document.getElementById('signup-username').value.trim();
     const password = document.getElementById('signup-password').value;
+    
+    // Get existing users from localStorage or create an empty array
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    
+    // Check if the user already exists
+    const userExists = users.some(user => user.username === username);
+    if (userExists) {
+        alert('Username already exists! Please log in instead.');
+        return;
+    }
+    
+    // Save new user profile
+    users.push({ username, password });
+    localStorage.setItem('users', JSON.stringify(users));
+    
+    alert('Sign up successful! Please log in.');
+    toggleAuth('login'); // Switch back to the login view
+}
 
-    if ( username && password) {
-       // saving credentials
-       localstorage.setitem('savedUsername', username);
-       localstorage.setitem('savedPassword', password);
+// 3. Handle Login (Authenticates and navigates to the dashboard)
+function handleLogin(event) {
+    event.preventDefault();
+    
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    
+    // Get stored users
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    
+    // Verify credentials
+    const validUser = users.find(user => user.username === username && user.password === password);
+    
+    if (validUser) {
+        // Store current active session
+        localStorage.setItem('currentUser', username);
+        
+        alert('Login successful! Taking you to the dashboard...');
+        
+        // Redirect to your dashboard page (or change view visibility if it's a single-page app)
+        // window.location.href ='miniproj\index.html'; 
+        toggleAuth('dashboard-page');
 
-       alert("signup successful!")
-       toggleAuth('login');
     } else {
-        alert('Please complete all fields to sign up.');
+        alert('Invalid username or password. Please try again.');
     }
 }
 
-        function toggleAuth(type) {
-            if (type === 'signup') {
-                document.getElementById('login-form').style.display = 'none';
-                document.getElementById('signup-form').style.display = 'block';
-            } else {
-                document.getElementById('login-form').style.display = 'block';
-                document.getElementById('signup-form').style.display = 'none';
-            }
-        }
-
+// .......................................................................................................................................
 
         // File Upload Processing
         function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (file) {
-                uploadedFileName = file.name;
-                document.getElementById('file-title').innerText = `Configure Quiz for: ${uploadedFileName}`;
-                navigateTo('config-page');
-            }
+    const file = event.target.files[0];
+
+    if (file) {
+        if (file.type !== "application/pdf" &&
+            !file.name.toLowerCase().endsWith(".pdf")) {
+            alert("Please select a PDF file.");
+            event.target.value = "";
+            return;
         }
 
+        uploadedPdfFile = file;
+        uploadedFileName = file.name;
 
+        document.getElementById("file-title").innerText =
+            `Configure Quiz for: ${uploadedFileName}`;
 
+        navigateTo("config-page");
+    }
+}
+
+        //file upload
+        function handleTopicInput(event) {
+    if (event.key === "Enter") {
+        const topicVal = event.target.value.trim();
+
+        if (topicVal) {
+            selectedTopic = topicVal;
+            uploadedFileName = "";
+            selectedFile = null;
+
+            document.getElementById("file-title").innerText =
+                `Configure Quiz for: ${selectedTopic}`;
+
+            navigateTo("config-page");
+        }
+    }
+}
+
+        
         // Mock AI Quiz Generation based on settings
-                async function startQuiz(){
+                async function startQuiz() {
+    const difficulty =
+        document.getElementById("difficulty-select").value;
 
-                const difficulty =document.getElementById('difficulty-select').value;
+    const noofquestions =
+        document.getElementById("noofquestions").value;
 
-                const feedbackMode = document.getElementById('feedback-mode-select').value;
+    const feedbackMode =
+        document.getElementById("feedback-mode-select").value;
 
-                try{
-                    const response = await fetch(
-                        "http://localhost:5000/api/quiz/generate",
-                        {
-                            method: "POST",
+    const formData = new FormData();
 
-                            headers: {
-                                "Content-Type": "application/json"
-                            },
+    formData.append("difficulty", difficulty);
+    formData.append("noofquestions", noofquestions);
+    formData.append("feedbackMode", feedbackMode);
 
-                            body: JSON.stringify({
-                                fileName: uploadedFileName,
-                                difficulty: difficulty,
-                                feedbackMode: feedbackMode,
-                                noofquestions: 10
-                            })
-                        }
-                    );
+    // PDF mode
+    if (uploadedPdfFile) {
+        formData.append("pdf", uploadedPdfFile);
+        formData.append("fileName", uploadedPdfFile.name);
+    }
 
-                    const data =await response.json();
-                    console.log("backend response:", data);
+    // Topic mode
+    else if (selectedTopic) {
+        formData.append("fileName", selectedTopic);
+    }
 
-                    if(!data.success) {
-                        alert("quiz generation failed:(");
-                        return;
-                    }
+    // Validate input
+    else {
+        alert("Please upload a PDF or enter a topic.");
+        return;
+    }
 
-                    //store quiz from backend
-                    currentQuiz= data.quiz.questions;
-
-                    //continue with existing quiz display code
-                    navigate('quiz-page');
-
-                }catch (error){
-                    console.error("backend error:", error);
-
-                    alert("couldn't connect to backend. is the server running?");
-                }
+    try {
+        const response = await fetch(
+            "http://localhost:5000/api/quiz/generate",
+            {
+                method: "POST",
+                body: formData
             }
+        );
+
+        const data = await response.json();
+
+        console.log("Backend response:", data);
+
+        if (!response.ok) {
+            throw new Error(
+                data.message || `HTTP Error: ${response.status}`
+            );
+        }
+
+        if (
+            !data.quiz ||
+            !Array.isArray(data.quiz.questions) ||
+            data.quiz.questions.length === 0
+        ) {
+            throw new Error("The backend did not return a valid quiz.");
+        }
+
+        currentQuiz = data.quiz.questions;
+
+        // Reset quiz state for a new quiz
+        currentQuestionIndex = 0;
+        score = 0;
+        userAnswers = [];
+
+        navigateTo("quiz-page");
+        renderQuestion();
+
+    } catch (error) {
+        console.error("Quiz generation error:", error);
+        alert(error.message);
+    }
+}
 
         function renderQuestion() {
             const q = currentQuiz[currentQuestionIndex];
@@ -147,21 +237,29 @@ function handleSignup(event) {
             
             // Disable all option buttons after click
             buttons.forEach(btn => btn.disabled = true);
+
+            const selectedOptionText=q.options[selectedIndex];
             
-            const isCorrect = selectedIndex === q.answer;
+            const isCorrect = selectedOptionText === q.correctAnswer;
             if (isCorrect) score++;
 
             userAnswers.push({
                 question: q.question,
-                selected: q.options[selectedIndex],
-                correct: q.options[q.answer],
+                selected: selectedOptionText,
+                correct: q.correctAnswer,
                 isCorrect: isCorrect,
                 explanation: q.explanation
             });
 
             if (feedbackMode === 'per-question') {
                 buttons[selectedIndex].classList.add(isCorrect ? 'correct' : 'incorrect');
-                buttons[q.answer].classList.add('correct');
+                // buttons[q.answer].classList.add('correct');
+
+                buttons.forEach(btn =>{
+                    if (btn.innerText === q.correctAnswer){
+                        btn.classList.add('correct');
+                    }
+                });
 
                 const expBox = document.getElementById('explanation-container');
                 expBox.innerText = `Explanation: ${q.explanation}`;
@@ -183,7 +281,7 @@ function handleSignup(event) {
             }
         }
 
-        function showResults() {
+        function showResults(){
             navigateTo('results-page');
             document.getElementById('score-text').innerText = `You scored ${score} / ${currentQuiz.length}`;
             

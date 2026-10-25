@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express= require("express");
 const cors = require("cors");
 
@@ -12,39 +13,45 @@ app.get("/", (req, res) =>{
     });
 });
 
+const quizRoutes = require("./routes/quizRoutes");
+app.use("/api/quiz",quizRoutes);                    //base url for quiz route
+
+
+
+
 // generate  quiz api
-app.post("/api/quiz/generate", (req, res)=> {
+// app.post("/api/quiz/generate", (req, res)=> {
 
-    const{fileName, difficulty, feedbackMode, numberOfQuestions} = req.body;
+//     const{fileName, difficulty, feedbackMode, noofquestions} = req.body;
 
-    console.log("file:",fileName);
-    console.log("Difficulty:", difficulty);
-    console.log("explanation:", feedbackMode);
-    console.log("noofquestions:", numberOfQuestions);
+//     console.log("file:",fileName);
+//     console.log("Difficulty:", difficulty);
+//     console.log("explanation:", feedbackMode);
+//     console.log("noofquestions:", noofquestions);
 
 
 
-    res.json({
-    success: true,
-    message: "quiz request received!",
-    quiz: {
-        file: fileName,
-        Difficulty: difficulty,
-        explanation: feedbackMode,
-        noofquestions: numberOfQuestions
-    }
-});
-});
+//     res.json({
+//     success: true,
+//     message: "quiz request received!",
+//     quiz: {
+//         file: fileName,
+//         Difficulty: difficulty,
+//         explanation: feedbackMode,
+//         noofquestions: noofquestions
+//     }
+// });
+// });
+
 
 const PORT= 5000;
 
 app.listen(PORT, () =>{
-    console.log('server running on http://localhost:${PORT}');
+    console.log(`server running on http://localhost:${PORT}`);
 });
 
 
-
-//mysql connection
+// mysql connection
 // const mysql = require("mysql2");
 
 // const db = mysql.createPool({
